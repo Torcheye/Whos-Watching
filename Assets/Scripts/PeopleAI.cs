@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.AI;
 using Random = UnityEngine.Random;
@@ -27,6 +28,7 @@ public class PeopleAI : MonoBehaviour
     private float _notVisibleTimer;
     private bool _notVisibleOvershooting;
     private float _originSpeed;
+    private bool _isStart;
 
     protected MoveState MoveState
     {
@@ -49,6 +51,7 @@ public class PeopleAI : MonoBehaviour
     {
         _originSpeed = _agent.speed;
         MoveState = MoveState.Idle;
+        _isStart = true;
     }
 
     private void Update()
@@ -68,9 +71,17 @@ public class PeopleAI : MonoBehaviour
         
         if (!_playerInSight && sees)
         {
+            if (_isStart)
+                _isStart = false;
             if (!_notVisibleOvershooting)
                 GameManager.Instance.AddToDisplayList(this);
             _notVisibleOvershooting = false;
+            if (isEnemy && MoveState != MoveState.Chase)
+            {
+                MoveState = MoveState.Chase;
+                GameManager.Instance.PlaySound(Sound.EnemyDetect);
+                GameManager.Instance.PlaySound(Sound.Chase);
+            }
         }
         else if (_playerInSight && !sees) 
         {
@@ -93,13 +104,11 @@ public class PeopleAI : MonoBehaviour
             else
             {
                 if (_notVisibleTimer > notVisibleTime * 3)
+                {
                     MoveState = MoveState.Idle;
+                    GameManager.Instance.PlaySound(Sound.BGM);
+                }
             }
-        }
-        
-        if (isEnemy && sees && MoveState != MoveState.Chase)
-        {
-            MoveState = MoveState.Chase;
         }
 
         if (_playerInSight)
@@ -113,6 +122,9 @@ public class PeopleAI : MonoBehaviour
 
     private void UpdateMoveState()
     {
+        if (_isStart)
+            return;
+        
         if (MoveState == MoveState.Idle)
         {
             if (_stateTimer >= _currentIdleTime)
@@ -134,7 +146,12 @@ public class PeopleAI : MonoBehaviour
         }
         else if (MoveState == MoveState.Chase)
         {
-            _agent.SetDestination(GameManager.Instance.player.transform.position);
+            var playerPos = GameManager.Instance.player.transform.position;
+            _agent.SetDestination(playerPos);
+            if (Vector3.Distance(playerPos, transform.position) < 1)
+            {
+                GameManager.Instance.Lose();
+            }
         }
 
         _animator.SetFloat(Velocity, _agent.velocity.magnitude);
