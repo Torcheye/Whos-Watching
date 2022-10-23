@@ -9,11 +9,14 @@ public class GameManager : MonoBehaviour
     public GameObject player;
     public List<GameObject> uiImages;
     public CameraDisplayScriptableObject displayConfig;
+    public CanvasGroup win;
+    public CanvasGroup lose;
 
     private AudioSource _audioSource;
     private List<PeopleAI> _peoples;
     private List<RenderTexture> _renderTextures;
     private List<int> _displayList;
+    private List<GameObject> _checkPoints;
 
     private void Awake()
     {
@@ -24,6 +27,12 @@ public class GameManager : MonoBehaviour
         _peoples = new List<PeopleAI>(FindObjectsOfType<PeopleAI>());
         _renderTextures = new List<RenderTexture>();
         _displayList = new List<int>();
+        _checkPoints = new List<GameObject>(GameObject.FindGameObjectsWithTag("CheckPoint"));
+
+        for (var i = 1; i < _checkPoints.Count; i++)
+        {
+            _checkPoints[i].SetActive(false);
+        }
         
         for (var i = 0; i < _peoples.Count; i++)
         {
@@ -34,6 +43,27 @@ public class GameManager : MonoBehaviour
                 uiImages[i].transform.GetChild(1).gameObject.SetActive(true);
             }
         }
+    }
+
+    public void OnCheckPointReached(GameObject c)
+    {
+        c.SetActive(false);
+        var index = _checkPoints.IndexOf(c);
+        
+        if (index != _checkPoints.Count - 1)
+            _checkPoints[index + 1].SetActive(true);
+        else 
+            Win();
+    }
+
+    private void Win()
+    {
+        win.DOFade(1, 1);
+    }
+
+    private void Lose()
+    {
+        lose.DOFade(1, 1);
     }
 
     private void OnDisplayListChanged()
