@@ -1,89 +1,85 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 using Random = UnityEngine.Random;
 
-enum MoveState
+public enum MoveState
 {
     Idle,
     Wander,
     Chase
-}
-    
-enum LookState
-{
-    Idle,
-    Look
 }
 
 public class PeopleAI : MonoBehaviour
 {
     public Vector2 idleTime;
     public float wanderWalkDist;
+    public float viewAngle;
+    public float notVisibleTime;
     
     private Animator _animator;
-    private LookState _lookState;
     private NavMeshAgent _agent;
-    private Camera _camera;
     private float _stateTimer;
     private float _currentIdleTime;
     private bool _playerInSight;
+    private float _notVisibleTimer;
+    private bool _notVisibleOvershooting;
 
-    private MoveState MoveState
+    protected MoveState MoveState
     {
         get => _moveState;
         set => OnMoveStateChanged(value);
     }
     private MoveState _moveState;
     
+    private static readonly int Velocity = Animator.StringToHash("Velocity");
+    private static readonly int IsMoving = Animator.StringToHash("IsMoving");
+
     private void Awake()
     {
         _animator = GetComponent<Animator>();
         _agent = GetComponent<NavMeshAgent>();
-        _camera = GetComponentInChildren<Camera>();
     }
 
-    private void Start()
+    protected virtual void Start()
     {
-        MoveState = MoveState.Wander;
-        _lookState = LookState.Look;
+        MoveState = MoveState.Idle;
     }
 
     private void Update()
     {
-        //UpdateLookState();
         UpdateMoveState();
 
-        var sees = Vector3.Dot(transform.forward,
-            GameManager.Instance.player.transform.position - transform.position) > 0;
+        _notVisibleTimer += Time.deltaTime;
+        _stateTimer += Time.deltaTime;
+
+        var playerDir = GameManager.Instance.player.transform.position - transform.position;
+        var sees = Vector3.Angle(transform.forward, playerDir) < viewAngle;
+        if (sees)
+            sees &= !Physics.Raycast(transform.position, playerDir, playerDir.magnitude,
+                LayerMask.GetMask("Wall"));
+
         if (!_playerInSight && sees)
         {
-            GameManager.Instance.AddToDisplayList(this);
+            if (!_notVisibleOvershooting)
+                GameManager.Instance.AddToDisplayList(this);
+            _notVisibleOvershooting = false;
         }
-        else if (_playerInSight && !sees)
+        else if (_playerInSight && !sees) 
         {
-            GameManager.Instance.RemoveFromDisplayList(this);
+            _notVisibleTimer = 0;
+            _notVisibleOvershooting = true;
         }
         _playerInSight = sees;
-    }
 
-    private void UpdateLookState()
-    {
-        if (_lookState == LookState.Idle)
+        if (_notVisibleOvershooting && _notVisibleTimer > notVisibleTime && !sees)
         {
-            
-        }
-        else if (_lookState == LookState.Look)
-        {
-            _camera.transform.LookAt(GameManager.Instance.player.transform.position);
+            GameManager.Instance.RemoveFromDisplayList(this);
+            _notVisibleOvershooting = false;
         }
     }
 
     private void UpdateMoveState()
     {
-        _stateTimer += Time.deltaTime;
         if (MoveState == MoveState.Idle)
         {
             if (_stateTimer >= _currentIdleTime)
@@ -99,22 +95,17 @@ public class PeopleAI : MonoBehaviour
             {
                 MoveState = MoveState.Idle;
             }
+
+            if (_stateTimer > 8)
+                _moveState = MoveState.Idle;
         }
         else if (MoveState == MoveState.Chase)
         {
             _agent.SetDestination(GameManager.Instance.player.transform.position);
         }
 
-        if (_agent.velocity.sqrMagnitude > 0.1f)
-        {
-            _animator.SetFloat("VelocityX", _agent.velocity.x);
-            _animator.SetFloat("VelocityY", _agent.velocity.y);
-            _animator.SetBool("IsWalking", true);
-        }
-        else
-        {
-            _animator.SetBool("IsWalking", false);
-        }
+        _animator.SetFloat(Velocity, _agent.velocity.magnitude / _agent.speed);
+        _animator.SetBool(IsMoving, _agent.velocity.sqrMagnitude > 0);
     }
 
     private void OnMoveStateChanged(MoveState newState)
@@ -126,7 +117,7 @@ public class PeopleAI : MonoBehaviour
         }
         else if (newState == MoveState.Wander)
         {
-            var randomPoint = Random.insideUnitCircle * wanderWalkDist;
+            var randomPoint = (Vector2)transform.position + Random.insideUnitCircle * wanderWalkDist;
             var target = new Vector3(randomPoint.x, 0, randomPoint.y);
             _agent.SetDestination(target);
         }

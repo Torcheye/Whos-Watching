@@ -17,18 +17,18 @@ public class CameraDisplayScriptableObject : ScriptableObject
     public List<Vector2> uiPos8;
     public List<float> uiSizes;
     
-    public Vector2 GetUIPos(int number, int index)
+    public List<Vector2> GetUIPos(int number)
     {
         return number switch
         {
-            1 => uiPos1[index],
-            2 => uiPos2[index],
-            3 => uiPos3[index],
-            4 => uiPos4[index],
-            5 => uiPos5[index],
-            6 => uiPos6[index],
-            7 => uiPos7[index],
-            8 => uiPos8[index],
+            1 => uiPos1,
+            2 => uiPos2,
+            3 => uiPos3,
+            4 => uiPos4,
+            5 => uiPos5,
+            6 => uiPos6,
+            7 => uiPos7,
+            8 => uiPos8,
             _ => throw new ArgumentOutOfRangeException()
         };
     }

@@ -1,8 +1,6 @@
-using System;
 using System.Collections.Generic;
 using DG.Tweening;
 using UnityEngine;
-using UnityEngine.Assertions;
 using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
@@ -47,23 +45,41 @@ public class GameManager : MonoBehaviour
             else
             {
                 uiImages[i].SetActive(false);
+                uiImages[i].GetComponent<RectTransform>().anchoredPosition = Vector2.zero;
                 img.texture = null;
             }
         }
 
+        if (_displayList.Count == 0)
+            return;
         var number = _displayList.Count;
+        var pendingPos = new List<Vector2>(displayConfig.GetUIPos(number));
         foreach (var i in _displayList)
         {
-            var indexInDL = _displayList.IndexOf(i);
             var rect = uiImages[i].GetComponent<RectTransform>();
-            rect.DOScale(displayConfig.GetUISize(number), .5f);
-            rect.DOAnchorPos(
-                displayConfig.GetUIPos(number, indexInDL), .5f);
+            rect.DOScale(displayConfig.GetUISize(number), .8f);
+
+            var minDist = float.MaxValue;
+            var minPos = pendingPos[0];
+            foreach (var p in pendingPos)
+            {
+                var d = Vector2.Distance(p, rect.anchoredPosition);
+                if (d < minDist)
+                {
+                    minDist = d;
+                    minPos = p;
+                }
+            }
+            rect.DOAnchorPos(minPos, .8f);
+            pendingPos.Remove(minPos);
         }
     }
 
     public void AddToDisplayList(PeopleAI p)
     {
+        if (_displayList.Count == 6)
+            return;
+        
         var index = _peoples.IndexOf(p);
         if (_displayList.Contains(index))
         {
