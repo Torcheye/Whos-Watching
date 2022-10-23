@@ -38,6 +38,7 @@ public class GameManager : MonoBehaviour
     private List<int> _displayList;
     private List<GameObject> _checkPoints;
     private int _lastFootstep;
+    private bool _win;
 
     public void PlaySound(Sound s)
     {
@@ -118,11 +119,14 @@ public class GameManager : MonoBehaviour
 
     private void Win()
     {
+        _win = true;
         win.DOFade(1, 1);
     }
 
     public void Lose()
     {
+        if (_win)
+            return;
         lose.DOFade(1, 1);
         StartCoroutine(Restart());
     }
@@ -130,7 +134,7 @@ public class GameManager : MonoBehaviour
     private IEnumerator Restart()
     {
         yield return new WaitForSeconds(2);
-        SceneManager.LoadScene(0);
+        SceneManager.LoadScene(1);
     }
 
     private void OnDisplayListChanged()

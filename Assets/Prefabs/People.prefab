@@ -1018,10 +1018,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 220227c277dec0c458a5a0df1d3bd5c6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  idleTime: {x: 2, y: 5}
+  idleTime: {x: 3, y: 6}
   wanderWalkDist: 0.8
-  wanderAimAngle: 75
-  viewAngle: 50
+  wanderAimAngle: 70
+  viewAngle: 55
   notVisibleTime: 1.5
   isEnemy: 0
 --- !u!1 &5590427953812091147

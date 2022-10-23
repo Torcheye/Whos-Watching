@@ -62,7 +62,7 @@ public class PlayerController : MonoBehaviour
             {
                 GameManager.Instance.PlaySound(Sound.Footstep);
             }
-            yield return new WaitForSeconds(_isRunning ? .23f : .4f);
+            yield return new WaitForSeconds(_isRunning ? .37f : .4f);
         }
     }
 }

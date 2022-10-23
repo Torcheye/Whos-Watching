@@ -111,7 +111,11 @@ public class PeopleAI : MonoBehaviour
             }
         }
 
-        if (_playerInSight)
+        if (MoveState == MoveState.Chase)
+        {
+            _cam.transform.LookAt(GameManager.Instance.player.transform.position + 1.8f * Vector3.up);
+        }
+        else if (_playerInSight)
         {
             var dest = Vector3.Lerp(_cam.transform.TransformPoint(Vector3.forward),
                 GameManager.Instance.player.transform.position + 1.8f * Vector3.up,
