@@ -95,6 +95,9 @@ public class GameManager : MonoBehaviour
     
     public void RemoveFromDisplayList(PeopleAI p)
     {
+        if (_displayList.Count == 0)
+            return;
+        
         var index = _peoples.IndexOf(p);
         if (!_displayList.Contains(index))
         {

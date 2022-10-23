@@ -1001,7 +1001,7 @@ NavMeshAgent:
   m_StoppingDistance: 0
   m_AutoTraverseOffMeshLink: 1
   m_AutoBraking: 1
-  m_AutoRepath: 1
+  m_AutoRepath: 0
   m_Height: 2
   m_BaseOffset: 0
   m_WalkableMask: 4294967295
@@ -1018,10 +1018,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 220227c277dec0c458a5a0df1d3bd5c6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  idleTime: {x: 1, y: 3}
-  wanderWalkDist: 1
-  viewAngle: 40
-  notVisibleTime: 2
+  idleTime: {x: 3, y: 6}
+  wanderWalkDist: 0.5
+  wanderAimAngle: 55
+  viewAngle: 35
+  notVisibleTime: 1.5
+  isEnemy: 0
+  enemyLockTime: 1
 --- !u!1 &5590427953812091147
 GameObject:
   m_ObjectHideFlags: 0

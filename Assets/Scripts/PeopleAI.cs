@@ -13,16 +13,21 @@ public class PeopleAI : MonoBehaviour
 {
     public Vector2 idleTime;
     public float wanderWalkDist;
+    public float wanderAimAngle;
     public float viewAngle;
     public float notVisibleTime;
+    public bool isEnemy;
+    public float enemyLockTime;
     
     private Animator _animator;
     private NavMeshAgent _agent;
+    private Camera _cam;
     private float _stateTimer;
     private float _currentIdleTime;
     private bool _playerInSight;
     private float _notVisibleTimer;
     private bool _notVisibleOvershooting;
+    private float _enemyLockTimer;
 
     protected MoveState MoveState
     {
@@ -38,6 +43,7 @@ public class PeopleAI : MonoBehaviour
     {
         _animator = GetComponent<Animator>();
         _agent = GetComponent<NavMeshAgent>();
+        _cam = GetComponentInChildren<Camera>();
     }
 
     protected virtual void Start()
@@ -51,18 +57,22 @@ public class PeopleAI : MonoBehaviour
 
         _notVisibleTimer += Time.deltaTime;
         _stateTimer += Time.deltaTime;
+        _enemyLockTimer += Time.deltaTime;
 
-        var playerDir = GameManager.Instance.player.transform.position - transform.position;
-        var sees = Vector3.Angle(transform.forward, playerDir) < viewAngle;
+        var transform1 = transform;
+        var playerDir = GameManager.Instance.player.transform.position - transform1.position;
+        var sees = Vector3.Angle(transform1.forward, playerDir) < viewAngle;
+
         if (sees)
-            sees &= !Physics.Raycast(transform.position, playerDir, playerDir.magnitude,
-                LayerMask.GetMask("Wall"));
+            sees &= !Physics.Raycast(transform1.position + Vector3.up * 1.8f,
+                playerDir, playerDir.magnitude, LayerMask.GetMask("Wall"));
 
         if (!_playerInSight && sees)
         {
             if (!_notVisibleOvershooting)
                 GameManager.Instance.AddToDisplayList(this);
             _notVisibleOvershooting = false;
+            _enemyLockTimer = 0;
         }
         else if (_playerInSight && !sees) 
         {
@@ -75,6 +85,19 @@ public class PeopleAI : MonoBehaviour
         {
             GameManager.Instance.RemoveFromDisplayList(this);
             _notVisibleOvershooting = false;
+            _cam.transform.localRotation = Quaternion.identity;
+            if (MoveState == MoveState.Chase)
+                MoveState = MoveState.Idle;
+        }
+        
+        if (isEnemy && _playerInSight && _enemyLockTimer > enemyLockTime && MoveState != MoveState.Chase)
+        {
+            MoveState = MoveState.Chase;
+        }
+
+        if (_playerInSight)
+        {
+            _cam.transform.LookAt(GameManager.Instance.player.transform);
         }
     }
 
@@ -96,7 +119,7 @@ public class PeopleAI : MonoBehaviour
                 MoveState = MoveState.Idle;
             }
 
-            if (_stateTimer > 8)
+            if (_stateTimer > wanderWalkDist / _agent.speed)
                 _moveState = MoveState.Idle;
         }
         else if (MoveState == MoveState.Chase)
@@ -104,7 +127,7 @@ public class PeopleAI : MonoBehaviour
             _agent.SetDestination(GameManager.Instance.player.transform.position);
         }
 
-        _animator.SetFloat(Velocity, _agent.velocity.magnitude / _agent.speed);
+        _animator.SetFloat(Velocity, _agent.velocity.magnitude);
         _animator.SetBool(IsMoving, _agent.velocity.sqrMagnitude > 0);
     }
 
@@ -117,9 +140,12 @@ public class PeopleAI : MonoBehaviour
         }
         else if (newState == MoveState.Wander)
         {
-            var randomPoint = (Vector2)transform.position + Random.insideUnitCircle * wanderWalkDist;
-            var target = new Vector3(randomPoint.x, 0, randomPoint.y);
-            _agent.SetDestination(target);
+            var pos = transform.position;
+            var playerDir = Vector3.Normalize(GameManager.Instance.player.transform.position - pos);
+            var target = Quaternion.Euler(0, Random.Range(-wanderAimAngle, wanderAimAngle), 0) 
+                         * playerDir * wanderWalkDist;
+
+            _agent.SetDestination(pos + target);
         }
 
         _moveState = newState;
