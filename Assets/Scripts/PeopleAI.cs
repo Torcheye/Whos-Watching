@@ -29,6 +29,7 @@ public class PeopleAI : MonoBehaviour
     private Camera _camera;
     private float _stateTimer;
     private float _currentIdleTime;
+    private bool _playerInSight;
 
     private MoveState MoveState
     {
@@ -54,6 +55,18 @@ public class PeopleAI : MonoBehaviour
     {
         //UpdateLookState();
         UpdateMoveState();
+
+        var sees = Vector3.Dot(transform.forward,
+            GameManager.Instance.player.transform.position - transform.position) > 0;
+        if (!_playerInSight && sees)
+        {
+            GameManager.Instance.AddToDisplayList(this);
+        }
+        else if (_playerInSight && !sees)
+        {
+            GameManager.Instance.RemoveFromDisplayList(this);
+        }
+        _playerInSight = sees;
     }
 
     private void UpdateLookState()
