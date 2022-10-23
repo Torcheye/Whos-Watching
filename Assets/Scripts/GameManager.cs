@@ -29,6 +29,10 @@ public class GameManager : MonoBehaviour
         {
             _renderTextures.Add(new RenderTexture(1080, 1080, 16));
             _peoples[i].GetComponentInChildren<Camera>().targetTexture = _renderTextures[i];
+            if (_peoples[i].isEnemy)
+            {
+                uiImages[i].transform.GetChild(1).gameObject.SetActive(true);
+            }
         }
     }
 
