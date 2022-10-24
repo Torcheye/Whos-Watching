@@ -30,13 +30,13 @@ public class GameManager : MonoBehaviour
     public AudioClip checkpoint;
     public AudioClip bgm;
     public AudioClip chase;
+    public List<GameObject> checkPoints;
 
     private AudioSource _audioSource;
     private AudioSource _bgmSource;
     private List<PeopleAI> _peoples;
     private List<RenderTexture> _renderTextures;
     private List<int> _displayList;
-    private List<GameObject> _checkPoints;
     private int _lastFootstep;
     private bool _win;
 
@@ -82,11 +82,10 @@ public class GameManager : MonoBehaviour
         _peoples = new List<PeopleAI>(FindObjectsOfType<PeopleAI>());
         _renderTextures = new List<RenderTexture>();
         _displayList = new List<int>();
-        _checkPoints = new List<GameObject>(GameObject.FindGameObjectsWithTag("CheckPoint"));
 
-        for (var i = 1; i < _checkPoints.Count; i++)
+        for (var i = 1; i < checkPoints.Count; i++)
         {
-            _checkPoints[i].SetActive(false);
+            checkPoints[i].SetActive(false);
         }
         
         for (var i = 0; i < _peoples.Count; i++)
@@ -109,10 +108,10 @@ public class GameManager : MonoBehaviour
     {
         PlaySound(Sound.Checkpoint);
         c.SetActive(false);
-        var index = _checkPoints.IndexOf(c);
+        var index = checkPoints.IndexOf(c);
 
-        if (index != _checkPoints.Count - 1)
-            _checkPoints[index + 1].SetActive(true);
+        if (index != checkPoints.Count - 1)
+            checkPoints[index + 1].SetActive(true);
         else 
             Win();
     }
